@@ -2,25 +2,30 @@ import { Stack } from 'expo-router';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
-import { HUDAlert } from '../components/HUDAlert';
+import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
+import { db } from '../db/db';
+import migrations from '../drizzle/migrations';
+import { HUDAlert } from '../components/HUDAlert'; 
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const [loaded, error] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     'Cozy-Regular': require('../assets/fonts/PlaypenSans-Regular.ttf'),
     'Cozy-Medium': require('../assets/fonts/PlaypenSans-Medium.ttf'),
     'Cozy-Bold': require('../assets/fonts/PlaypenSans-Bold.ttf'),
     'Cozy-ExtraBold': require('../assets/fonts/PlaypenSans-ExtraBold.ttf'),
   });
 
+  const { success: migrationsSuccess, error: migrationsError } = useMigrations(db, migrations);
+
   useEffect(() => {
-    if (loaded || error) {
+    if ((fontsLoaded || fontError) && (migrationsSuccess || migrationsError)) {
       SplashScreen.hideAsync();
     }
-  }, [loaded, error]);
+  }, [fontsLoaded, fontError, migrationsSuccess, migrationsError]);
 
-  if (!loaded && !error) {
+  if (!fontsLoaded || !migrationsSuccess) {
     return null; 
   }
 

@@ -1,14 +1,16 @@
-import React, { useEffect, useRef } from 'react';
-import { Animated, Text, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Animated, Pressable, Text, StyleSheet, View } from 'react-native';
 import { usePantryStore } from '../store/usePantryStore';
 import { theme } from '../styles/theme';
 import { globalStyles } from '../styles/globalStyles';
 
 export const HUDAlert = () => {
-  const { lastAlert, clearAlert } = usePantryStore();
+  const lastAlert = usePantryStore((state) => state.lastAlert);
+  const clearAlert = usePantryStore((state) => state.clearAlert);
+  const addToShoppingList = usePantryStore((state) => state.addToShoppingList);
   
-  const translateY = useRef(new Animated.Value(150)).current;
-  const opacity = useRef(new Animated.Value(0)).current;
+  const [translateY] = useState(() => new Animated.Value(150));
+  const [opacity] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
     if (lastAlert) {
@@ -39,11 +41,11 @@ export const HUDAlert = () => {
             useNativeDriver: true,
           })
         ]).start(() => clearAlert());
-      }, 3000);
+      }, lastAlert.type === 'prompt-shopping' ? 5000 : 3000);
 
       return () => clearTimeout(timer);
     }
-  }, [lastAlert]);
+  }, [lastAlert, clearAlert, opacity, translateY]);
 
   if (!lastAlert) return null;
 
@@ -58,9 +60,20 @@ export const HUDAlert = () => {
         transform: [{ translateY }] 
       }
     ]}>
-      <Text style={[globalStyles.itemStock, { color: textColor, fontFamily: theme.fonts.bold }]}>
-        {lastAlert.message}
-      </Text>
+      <View style={styles.content}>
+        <Text style={[globalStyles.itemStock, { color: textColor, fontFamily: theme.fonts.bold }]}>
+          {lastAlert.message}
+        </Text>
+        {lastAlert.type === 'prompt-shopping' && lastAlert.productId && (
+          <Pressable
+            accessibilityRole="button"
+            style={styles.confirmButton}
+            onPress={() => void addToShoppingList(lastAlert.productId!)}
+          >
+            <Text style={styles.confirmButtonText}>Додати</Text>
+          </Pressable>
+        )}
+      </View>
     </Animated.View>
   );
 };
@@ -74,6 +87,23 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     paddingHorizontal: 14,
     minWidth: 130,
+  },
+  content: {
+    alignItems: 'center',
+    gap: 12,
+  },
+  confirmButton: {
+    minHeight: 40,
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+    borderWidth: 2,
+    borderColor: theme.colors.mintDark,
+    borderRadius: 10,
+    backgroundColor: theme.colors.mint,
+  },
+  confirmButtonText: {
+    fontFamily: theme.fonts.bold,
+    color: theme.colors.textGreen,
   },
     text: {
     fontFamily: theme.fonts.bold,

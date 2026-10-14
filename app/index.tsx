@@ -6,9 +6,19 @@ import noteImg from '../assets/images/note.png';
 import { usePantryStore } from '../store/usePantryStore';
 import { theme } from '../styles/theme';
 import { globalStyles } from '../styles/globalStyles';
+import { useEffect } from 'react';
 
 export default function KitchenScreen() {
   const router = useRouter();
+
+  const loadInventory = usePantryStore((state) => state.loadInventory);
+  const isLoaded = usePantryStore((state) => state.isLoaded);
+  useEffect(() => {
+    if (!isLoaded) {
+      loadInventory();
+    }
+  }, [isLoaded, loadInventory]);
+
   const insets = useSafeAreaInsets();
   
   // Беремо pantry та shoppingList зі стору
@@ -114,6 +124,14 @@ export default function KitchenScreen() {
           />
         </Pressable>
       </ImageBackground>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Додати товар"
+        style={[styles.addButton, { bottom: insets.bottom + 18 }]}
+        onPress={() => router.push('/add-product')}
+      >
+        <Text style={styles.addButtonText}>+</Text>
+      </Pressable>
     </View>
   );
 }
@@ -124,6 +142,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
+    position: 'relative',
   },
 imageCanvas: {
     width: '100%',
@@ -187,5 +206,29 @@ hudContainer: {
   },
   urgentText: {
     color: theme.colors.urgent,
-  }
+  },
+  addButton: {
+    position: 'absolute',
+    right: 20,
+    width: 60,
+    height: 60,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 3,
+    borderColor: theme.colors.mintDark,
+    borderRadius: 18,
+    backgroundColor: theme.colors.mint,
+    shadowColor: theme.colors.shadowMain,
+    shadowOffset: { width: 3, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 6,
+  },
+  addButtonText: {
+    fontFamily: theme.fonts.extraBold,
+    fontSize: 36,
+    color: theme.colors.textGreen,
+    marginTop: -6,
+    marginLeft: 2
+  },
 });
